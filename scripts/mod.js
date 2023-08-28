@@ -282,7 +282,8 @@ svg.text {
 		let link = strs_server + "/books/" + fname;
 		let xhr = new XMLHttpRequest();
 		xhr.open("get", link, true);
-		xhr.setRequestHeader("If-Modified-Since", "0"); // 强制刷新，不使用缓存
+		// 实际使用中，小说文件没必要强制刷新，使用缓存更节省时间和流量
+		// xhr.setRequestHeader("If-Modified-Since", "0"); // 强制刷新，不使用缓存
 		xhr.responseType = "blob";
 		xhr.onload = function () {
 			// console.log(this.response);
@@ -296,6 +297,16 @@ svg.text {
 	}
 
 	function showOpenFileOnServerDlg() {
+		$(`<dialog id="openFileOnServerDlg">
+            <div><span id="openFileOnServerDlgCloseBtn" class="dlg-close-btn">&times;</span></div>
+            <span id="openFileOnServerDlgBooklist" class="dlg-body" style="height:400px;overflow-y:scroll;">
+            	<img src="./images/loading_geometry.gif" style="height:350px;" />
+            </span>
+            </dialog>`).bind("cancel", hideOpenFileOnServerDlg).insertAfter("#switch-btn");
+		$("#openFileOnServerDlgCloseBtn").click(hideOpenFileOnServerDlg);
+		document.getElementById("openFileOnServerDlg").showModal();
+		document.onkeydown = null;
+
 		let fs = WebDAV.Fs(strs_server);
 		let dir = fs.dir("/books");
 		let lst = dir.children();
@@ -319,31 +330,21 @@ svg.text {
 				? (a[0].localeCompare(b[0], "zh"))
 				: (a[1] ? -1 : 1));
 		// console.log(fname_list);
-		let book_list = "";
+		let booklist = $("#openFileOnServerDlgBooklist");
+		booklist.html("");
 		for (const f of fname_list) {
-			book_list += `<div class="strs-book" style="cursor:pointer;border:1px gray dotted;padding:2px 3px;margin:5px 0px;" strs_data="${f[0]}">
+			booklist.append(`<div class="strs-book" style="cursor:pointer;border:1px gray dotted;padding:2px 3px;margin:5px 0px;" strs_data="${f[0]}">
                 <span>${f[0]}</span><span style="padding-left:50px;opacity:0.3;float:right;">${f[1]}</span>
-                </div>`;
+                </div>`);
 		}
-		$(`<dialog id="OpenFileOnServerDlg">
-            <div>
-                <span id="OpenFileOnServerDlgCloseBtn" class="dlg-close-btn">&times;</span>
-            </div>
-            <span class="dlg-body" style="height:400px;overflow-y:scroll;">
-            ${book_list}
-            </span>
-            </dialog>`).bind("cancel", hideOpenFileOnServerDlg).insertAfter("#switch-btn");
-		$("#OpenFileOnServerDlgCloseBtn").click(hideOpenFileOnServerDlg);
 		$(".strs-book").click((evt) => {
 			openFileOnServer(evt.currentTarget.attributes["strs_data"].value);
 			hideOpenFileOnServerDlg();
 		});
-		document.getElementById("OpenFileOnServerDlg").showModal();
-		document.onkeydown = null;
 	}
 
 	function hideOpenFileOnServerDlg() {
-		$('#OpenFileOnServerDlg').remove();
+		$('#openFileOnServerDlg').remove();
 		document.onkeydown = FUNC_KEYDOWN_;
 	}
 
