@@ -1,9 +1,12 @@
-const FUNC_KEYDOWN_ = document.onkeydown; // 保存页面原来的 onkeydown 函数，下面会临时屏蔽 onkeydown
+const __STRS_VER__ = "0.3.0";
 
-let MOD_ICON_POS = 70;
+(function () {
+	const FUNC_KEYDOWN_ = document.onkeydown; // 保存页面原来的 onkeydown 函数，下面会临时屏蔽 onkeydown
 
-// SVG icons
-$("head").append(`<svg>
+	let MOD_ICON_POS = 70;
+
+	// SVG icons
+	$("head").append(`<svg>
 <symbol id="settings" viewBox="0 -960 960 960">
 	<path d="M546-80H414q-11 0-19.5-7T384-105l-16-101q-19-7-40-19t-37-25l-93 43q-11 5-22 1.5T159-220L93-337q-6-10-3-21t12-18l86-63q-2-9-2.5-20.5T185-480q0-9 .5-20.5T188-521l-86-63q-9-7-12-18t3-21l66-117q6-11 17-14.5t22 1.5l93 43q16-13 37-25t40-18l16-102q2-11 10.5-18t19.5-7h132q11 0 19.5 7t10.5 18l16 101q19 7 40.5 18.5T669-710l93-43q11-5 22-1.5t17 14.5l66 116q6 10 3.5 21.5T858-584l-86 61q2 10 2.5 21.5t.5 21.5q0 10-.5 21t-2.5 21l86 62q9 7 12 18t-3 21l-66 117q-6 11-17 14.5t-22-1.5l-93-43q-16 13-36.5 25.5T592-206l-16 101q-2 11-10.5 18T546-80Zm-66-270q54 0 92-38t38-92q0-54-38-92t-92-38q-54 0-92 38t-38 92q0 54 38 92t92 38Zm0-60q-29 0-49.5-20.5T410-480q0-29 20.5-49.5T480-550q29 0 49.5 20.5T550-480q0 29-20.5 49.5T480-410Zm0-70Zm-44 340h88l14-112q33-8 62.5-25t53.5-41l106 46 40-72-94-69q4-17 6.5-33.5T715-480q0-17-2-33.5t-7-33.5l94-69-40-72-106 46q-23-26-52-43.5T538-708l-14-112h-88l-14 112q-34 7-63.5 24T306-642l-106-46-40 72 94 69q-4 17-6.5 33.5T245-480q0 17 2.5 33.5T254-413l-94 69 40 72 106-46q24 24 53.5 41t62.5 25l14 112Z"/>
 </symbol>
@@ -18,8 +21,8 @@ $("head").append(`<svg>
 </symbol>
 </svg>`);
 
-// CSS
-$("head").append(`<style>
+	// CSS
+	$("head").append(`<style>
 .icon-btn {
     cursor: pointer;
     position: fixed;
@@ -32,7 +35,7 @@ $("head").append(`<style>
 dialog {
     border-radius: 10px;
     font-family: ui;
-    font-size: var(--p_fontSize);
+    font-size: 1.2rem;
     background: var(--bgColor);
     color: var(--fontColor);
 }
@@ -49,12 +52,12 @@ dialog::backdrop {
     margin: 10px 20px;
     padding: 5px;
 }
-.dlg-body input {
+.dlg-body input[type="text"] {
     float: right;
     margin: 1px;
     border: 1px solid;
     font-family: ui;
-    font-size: 1em;
+    font-size: 1.2rem;
     background: var(--bgColor);
     color: var(--fontColor);
 }
@@ -63,9 +66,24 @@ dialog::backdrop {
     padding: 2px 10px;
     border: 1px solid;
     border-radius: 5px;
-    font-size: 1em;
+    font-size: 1.2rem;
     background: var(--bgColor);
     color: var(--fontColor);
+}
+.dlg-body .progress {
+	padding-left: 50px;
+	opacity: 0.3;
+	float: right;
+}
+.dlg-body .progress svg {
+    width: 1em;
+    height: 1em;
+    stroke: var(--fontColor);
+    fill: var(--fontColor);
+	vertical-align: middle;
+}
+input[type="checkbox"].dlg-chk {
+	display: inline;
 }
 #pagination:hover {
     opacity: 1;
@@ -74,19 +92,11 @@ svg.icon {
     stroke: var(--mainColor_focused);
     fill: var(--mainColor_focused);
 }
-svg.text {
-    width: 1em;
-    height: 1em;
-    stroke: var(--fontColor);
-    fill: var(--fontColor);
-}
 </style>`);
 
-// ------------------------------------------------
-// Settings
-// ------------------------------------------------
-(function () {
-
+	// ------------------------------------------------
+	// Settings
+	// ------------------------------------------------
 	function getCSS(sel, prop) {
 		for (const sheet of document.styleSheets) {
 			for (const rule of sheet.cssRules) {
@@ -149,54 +159,61 @@ svg.text {
 		setCSS("#pagination", "opacity", pagination_opacity, pagination_opacity_default);
 	}
 
+	function resetSettings() {
+		localStorage.removeItem("p_lineHeight");
+		localStorage.removeItem("p_fontSize");
+		localStorage.removeItem("light_fontColor");
+		localStorage.removeItem("light_bgColor");
+		localStorage.removeItem("dark_fontColor");
+		localStorage.removeItem("dark_bgColor");
+		localStorage.removeItem("pagination_bottom");
+		localStorage.removeItem("pagination_opacity");
+	}
+
 	function showSettingDlg() {
-		$(`
-<dialog id="settingDlg">
-	<div>
-		<span id="settingDlgCloseBtn" class="dlg-close-btn">&times;</span>
-	</div>
-	<span class="dlg-body">
-	<div>
-		<span>行高：</span>
-		<input type="text" size="10" style="float:right" id="setting_p_lineHeight" value="${p_lineHeight}" />
-	</div>
-	<div>
-		<span>字号：</span>
-		<input type="text" size="10" id="setting_p_fontSize" value="${p_fontSize}" />
-	</div>
-	<div>
-		<span>日间字符色：</span>
-		<input type="text" size="10" id="setting_light_fontColor" value="${light_fontColor}" />
-	</div>
-	<div>
-		<span>日间背景色：</span>
-		<input type="text" size="10" id="setting_light_bgColor" value="${light_bgColor}" />
-	</div>
-	<div>
-		<span>夜间字符色：</span>
-		<input type="text" size="10" id="setting_dark_fontColor" value="${dark_fontColor}" />
-	</div>
-	<div>
-		<span>夜间背景色：</span>
-		<input type="text" size="10" id="setting_dark_bgColor" value="${dark_bgColor}" />
-	</div>
-	<div>
-		<span>分页条与底部距离：</span>
-		<input type="text" size="10" id="setting_pagination_bottom" value="${pagination_bottom}" />
-	</div>
-	<div>
-		<span>分页条透明度：</span>
-		<input type="text" size="10" id="setting_pagination_opacity" value="${pagination_opacity}" />
-	</div>
-	<div style="padding:4px;margin-top:10px;">
-		<button id="settingDlgClrBtn" style="color:var(--mainColor_focused);">！清空设置&阅读历史！</button>
-		<button id="settingDlgOkBtn" style="float:right;">应用</button>
-	</div>
-	</span>
-</dialog>
-`).bind("cancel", hideSettingDlg).insertAfter("#switch-btn");
+		$(`<dialog id="settingDlg">
+<div><span id="settingDlgCloseBtn" class="dlg-close-btn">&times;</span></div>
+<span class="dlg-body">
+<div>
+	<span>行高：</span>
+	<input type="text" size="10" style="float:right" id="setting_p_lineHeight" value="${p_lineHeight}" />
+</div>
+<div>
+	<span>字号：</span>
+	<input type="text" size="10" id="setting_p_fontSize" value="${p_fontSize}" />
+</div>
+<div>
+	<span>日间字符色：</span>
+	<input type="text" size="10" id="setting_light_fontColor" value="${light_fontColor}" />
+</div>
+<div>
+	<span>日间背景色：</span>
+	<input type="text" size="10" id="setting_light_bgColor" value="${light_bgColor}" />
+</div>
+<div>
+	<span>夜间字符色：</span>
+	<input type="text" size="10" id="setting_dark_fontColor" value="${dark_fontColor}" />
+</div>
+<div>
+	<span>夜间背景色：</span>
+	<input type="text" size="10" id="setting_dark_bgColor" value="${dark_bgColor}" />
+</div>
+<div>
+	<span>分页条与底部距离：</span>
+	<input type="text" size="10" id="setting_pagination_bottom" value="${pagination_bottom}" />
+</div>
+<div>
+	<span>分页条透明度：</span>
+	<input type="text" size="10" id="setting_pagination_opacity" value="${pagination_opacity}" />
+</div>
+<div style="padding:4px;margin-top:10px;">
+	<button id="settingDlgClrBtn">恢复默认</button>
+	<button id="settingDlgOkBtn" style="float:right;">应用</button>
+</div>
+</span>
+</dialog>`).bind("cancel", hideSettingDlg).insertAfter("#switch-btn");
 		$("#settingDlgCloseBtn").click(hideSettingDlg);
-		$("#settingDlgClrBtn").click(() => { removeAllHistory(); loadSettings(); applySettings(); hideSettingDlg(); });
+		$("#settingDlgClrBtn").click(() => { resetSettings(); loadSettings(); applySettings(); hideSettingDlg(); });
 		$("#settingDlgOkBtn").click(() => { saveSettings(); applySettings(); hideSettingDlg(); });
 		document.getElementById("settingDlg").showModal();
 		// document.getElementById("settingDlg").
@@ -232,51 +249,55 @@ svg.text {
 	$(`<div class="icon-btn" style="bottom:${MOD_ICON_POS}px;"><svg class="icon"><use xlink:href="#settings"></use></svg></div>`)
 		.click(showSettingDlg).insertBefore("#switch");
 	MOD_ICON_POS += 50;
-})();
 
 
-// ------------------------------------------------
-// Open Link
-// ------------------------------------------------
-(function () {
-	function openLink(link) {
-		let xhr = new XMLHttpRequest();
-		xhr.open("get", link, true);
-		xhr.responseType = "blob";
-		xhr.onload = function () {
-			// console.log(this.response);
-			resetVars();
-			this.response.name = decodeURI(link);
-			handleSelectedFile([this.response]);
-		}
-		xhr.send();
-		showLoadingScreen();
-	}
+	// ------------------------------------------------
+	// Open Link
+	// ------------------------------------------------
+	// 	function openLink(link) {
+	// 		let xhr = new XMLHttpRequest();
+	// 		xhr.open("get", link, true);
+	// 		xhr.responseType = "blob";
+	// 		xhr.onload = function () {
+	// 			// console.log(this.response);
+	// 			resetVars();
+	// 			this.response.name = decodeURI(link);
+	// 			handleSelectedFile([this.response]);
+	// 		}
+	// 		xhr.send();
+	// 		showLoadingScreen();
+	// 	}
 
-	function showOpenLink() {
-		let link = prompt("打开 txt 链接");
-		if (!link)
-			return;
-		openLink(link);
-	}
+	// 	function showOpenLink() {
+	// 		let link = prompt("打开 txt 链接");
+	// 		if (!link)
+	// 			return;
+	// 		openLink(link);
+	// 	}
 
-	$(`<div class="icon-btn" style="bottom:${MOD_ICON_POS}px;"><svg class="icon"><use xlink:href="#link" /></svg></div>`)
-		.insertBefore("#switch").click(showOpenLink);
-	MOD_ICON_POS += 50;
-})();
+	// 	$(`<div class="icon-btn" style="bottom:${MOD_ICON_POS}px;"><svg class="icon"><use xlink:href="#link" /></svg></div>`)
+	// 		.insertBefore("#switch").click(showOpenLink);
+	// 	MOD_ICON_POS += 50;
 
 
-// ------------------------------------------------
-// Open file on server
-// ------------------------------------------------
-(function () {
-
+	// ------------------------------------------------
+	// Open file on server
+	// ------------------------------------------------
 	const strs_server = ""; // "http://localhost:8001";
 	const strs_tag = "☁|";
 	const strs_file_item = "STRS_FILE";
 
 	let strs_file = localStorage.getItem(strs_file_item);
 	let strs_file_line = ""; // strs_tag + filename + ":" + line
+	let strs_progress_on_server = false; // 服务端阅读进度
+
+	// 检查服务端 '/progress' 目录是否存在
+	try {
+		WebDAV.Fs(strs_server).dir("/progress").children();
+		strs_progress_on_server = true;
+	} catch (e) {
+		strs_progress_on_server = false;
+	}
 
 	function openFileOnServer(fname) { // fname: 不带 strs_tag 的文件名
 		let link = strs_server + "/books/" + fname;
@@ -287,17 +308,19 @@ svg.text {
 		xhr.responseType = "blob";
 		xhr.onload = function () {
 			// console.log(this.response);
-			resetVars();
-			loadProgressFromServer(fname);
-			this.response.name = strs_tag + fname;
-			handleSelectedFile([this.response]);
+			loadProgressFromServer(fname, () => {
+				resetVars();
+				localStorage.setItem(strs_file_item, fname);
+				this.response.name = strs_tag + fname;
+				handleSelectedFile([this.response]);
+			});
 		}
 		xhr.send();
 		showLoadingScreen();
 	}
 
 	function showOpenFileOnServerDlg() {
-		$(`<dialog id="openFileOnServerDlg">
+		$(`<dialog id="openFileOnServerDlg" style="min-width:300px;">
             <div><span id="openFileOnServerDlgCloseBtn" class="dlg-close-btn">&times;</span></div>
             <span id="openFileOnServerDlgBooklist" class="dlg-body" style="height:400px;overflow-y:scroll;">
             	<img src="./images/loading_geometry.gif" style="height:350px;" />
@@ -308,22 +331,26 @@ svg.text {
 		document.onkeydown = null;
 
 		let fs = WebDAV.Fs(strs_server);
-		let dir = fs.dir("/books");
-		let lst = dir.children();
 		let fname_list = [];
-		for (const f of lst) {
-			let fname = decodeURIComponent(f.name);
-			if (fname.substring(fname.length - 4).toLowerCase() == ".txt")
-				fname_list.push([fname, ""]);
-		}
-		for (const f of lst) {
-			let fname = decodeURIComponent(f.name);
-			if (fname.substring(fname.length - 9).toLowerCase() == ".progress") {
-				fname = fname.substring(0, fname.length - 9);
-				let book = fname_list.find((e) => e[0].toLowerCase() == fname.toLowerCase());
-				if (book)
-					book[1] = '<svg class="text" style="vertical-align:middle;"><use xlink:href="#clock_loader_40" /></svg>' + f.read();
+		try {
+			for (const f of fs.dir("/books").children()) {
+				let fname = decodeURIComponent(f.name);
+				if (fname.substring(fname.length - 4).toLowerCase() == ".txt")
+					fname_list.push([fname, ""]);
 			}
+			if (strs_progress_on_server) {
+				for (const f of fs.dir("/progress").children()) {
+					let fname = decodeURIComponent(f.name);
+					if (fname.substring(fname.length - 9).toLowerCase() == ".progress") {
+						fname = fname.substring(0, fname.length - 9);
+						let book = fname_list.find((e) => e[0].toLowerCase() == fname.toLowerCase());
+						if (book)
+							book[1] = '<svg><use xlink:href="#clock_loader_40" /></svg>' + f.read();
+					}
+				}
+			}
+		} catch (e) {
+			console.log(e);
 		}
 		fname_list.sort((a, b) =>
 			((a[1] && b[1]) || (!a[1] && !b[1]))
@@ -334,7 +361,7 @@ svg.text {
 		booklist.html("");
 		for (const f of fname_list) {
 			booklist.append(`<div class="strs-book" style="cursor:pointer;border:1px gray dotted;padding:2px 3px;margin:5px 0px;" strs_data="${f[0]}">
-                <span>${f[0]}</span><span style="padding-left:50px;opacity:0.3;float:right;">${f[1]}</span>
+                <span>${f[0]}</span><span class="progress" id="progress-${f[0]}">${f[1]}</span>
                 </div>`);
 		}
 		$(".strs-book").click((evt) => {
@@ -349,6 +376,8 @@ svg.text {
 	}
 
 	function saveProgressToServer() {
+		if (!strs_progress_on_server) // 不开启云端进度
+			return;
 		if ((filename) && (filename.substring(0, strs_tag.length) == strs_tag)) { // file on server
 			if (contentContainer.style.display == "none") { // 阅读区域不可见，说明可能正在drag，getTopLineNumber()会取到错误行数，应该跳过
 				// console.log("skip");
@@ -358,7 +387,7 @@ svg.text {
 			if ((filename + ":" + line) != strs_file_line) {
 				console.log("saveProgressToServer: " + filename + ":" + line);
 				localStorage.setItem(strs_file_item, filename.substring(strs_tag.length));
-				let prog_file = WebDAV.Fs(strs_server).file("/books/" + filename.substring(strs_tag.length) + ".progress");
+				let prog_file = WebDAV.Fs(strs_server).file("/progress/" + filename.substring(strs_tag.length) + ".progress");
 				prog_file.write(line);
 				strs_file_line = filename + ":" + line;
 			}
@@ -368,27 +397,28 @@ svg.text {
 		}
 	}
 
-	function loadProgressFromServer(fname) { // fname: 不带 strs_tag 的文件名
-		console.log("loadProgressFromServer: " + fname);
-		let line = 0;
-		let dir = WebDAV.Fs(strs_server).dir("/books");
-		for (const f of dir.children()) {
-			// console.log(f);
-			if (decodeURIComponent(f.name).toLocaleLowerCase() == (fname.toLocaleLowerCase() + ".progress")) {
-				try {
-					line = parseInt(f.read());
-				} catch (e) {
-					console.log("Err:" + e);
-					line = 0;
-				}
-				break;
+	function loadProgressFromServer(fname, onload) { // fname: 不带 strs_tag 的文件名
+		if (!strs_progress_on_server) { // 不开启云端进度
+			if (onload) {
+				// console.log('loadProgressFromServer.onload');
+				onload();
 			}
+			return;
 		}
-		setHistory(strs_tag + fname, line);
-		localStorage.setItem(strs_file_item, fname);
-		strs_file_line = strs_tag + fname + ":" + line;
-		// console.log("strs_file_line:" + strs_file_line);
-		return line;
+		WebDAV.Fs(strs_server).file("/progress/" + fname + ".progress").read((data) => {
+			if (!isNaN(data)) { // 取到服务端进度，同步到 localStorage
+				let line = parseInt(data);
+				console.log("loadProgressFromServer: " + fname + ":" + line);
+				setHistory(strs_tag + fname, line);
+				strs_file_line = strs_tag + fname + ":" + line;
+			} else {
+				strs_file_line = strs_tag + fname + ":" + (localStorage.getItem(strs_tag + fname)||0);
+			}
+			if (onload) { // 进度已同步，继续处理
+				// console.log('loadProgressFromServer.onload');
+				onload();
+			}
+		});
 	}
 
 	function strs_worker() { // 定时将当前书在 localStorage 里的进度保存到服务器上
@@ -397,7 +427,7 @@ svg.text {
 		setTimeout(strs_worker, 1000);
 	}
 
-	// hack functions
+	// hack WebDAV.js functions
 	function get_func_args(func) {
 		let re = /^\s*function\s*\w*\s*\(([^\)]*)\)[^{]*{.*}\s*$/si;
 		let r = re.exec(func.toString());
@@ -427,4 +457,5 @@ svg.text {
 	$(`<div class="icon-btn" style="bottom:${MOD_ICON_POS}px;"><svg class="icon"><use xlink:href="#cloud" /></svg></div>`)
 		.insertBefore("#switch").click(showOpenFileOnServerDlg);
 	MOD_ICON_POS += 50;
+
 })();
