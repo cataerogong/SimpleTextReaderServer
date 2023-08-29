@@ -21,6 +21,11 @@ function patch() {
     // window.parent 被误修改了，应该是 let emInPx = getSizePrecise('1em', contentContainer);
     // 所以改回来
     str_frm.contentWindow.parent = window;
+
+    script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "../scripts/mobile.js";
+    str_frm.contentWindow.document.body.appendChild(script);
 }
 </script>
 </body>

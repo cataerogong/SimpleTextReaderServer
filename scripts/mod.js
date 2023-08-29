@@ -27,8 +27,6 @@ const __STRS_VER__ = "0.3.0";
     cursor: pointer;
     position: fixed;
     right: 20px;
-    width: 30px;
-    height: 30px;
     padding: 4px;
     z-index: 1005;
 }
@@ -89,6 +87,8 @@ input[type="checkbox"].dlg-chk {
     opacity: 1;
 }
 svg.icon {
+	width: 2rem;
+	height: 2rem;
     stroke: var(--mainColor_focused);
     fill: var(--mainColor_focused);
 }
